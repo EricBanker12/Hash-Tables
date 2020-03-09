@@ -14,7 +14,9 @@ class HashTable:
     '''
     def __init__(self, capacity):
         self.capacity = capacity  # Number of buckets in the hash table
+        self.original_capacity = capacity
         self.storage = [None] * capacity
+        self.length = 0
 
 
     def _hash(self, key):
@@ -60,7 +62,9 @@ class HashTable:
 
         if not node:
             self.storage[index] = LinkedPair(key, value)
-            return
+            self.length += 1
+            if self.length > self.capacity * 0.7:
+                self.resize()
 
         while node:
             if node.key == key:
@@ -91,6 +95,10 @@ class HashTable:
                     prev_node.next = node.next
                 else: 
                     self.storage[index] = None
+                    self.length -= 1
+                    if self.capacity > self.original_capacity:
+                        if self.length < self.capacity * 0.2:
+                            self.resize(0.5)
                 return
             node, prev_node = node.next, node
 
@@ -116,7 +124,7 @@ class HashTable:
         return None
 
 
-    def resize(self):
+    def resize(self, multiplier=2):
         '''
         Doubles the capacity of the hash table and
         rehash all key/value pairs.
@@ -125,8 +133,9 @@ class HashTable:
         '''
         old_storage = self.storage
 
-        self.capacity *= 2
+        self.capacity = int(self.capacity * multiplier)
         self.storage = [None] * self.capacity
+        self.length = 0
 
         for node in old_storage:
             while node:
